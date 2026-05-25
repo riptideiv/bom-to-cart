@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BOM-to-Cart</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header>
+    <span class="logo">🛒 BOM-to-Cart</span>
+    <span id="agent-status" class="agent-status offline">Agent: ⬤</span>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab active" data-tab="bom">📋 BOM 表</button>
+    <button class="tab" data-tab="optimize">🏆 最优方案</button>
+    <button class="tab" data-tab="console">🖥 搜索控制台</button>
+  </nav>
+
+  <main>
+    <!-- ── Tab 1: BOM Table ── -->
+    <section id="tab-bom" class="tab-content active">
+      <!-- BOM Manager bar -->
+      <div class="bom-manager">
+        <select id="bom-selector" class="bom-select">
+          <option value="">— 选择 BOM —</option>
+        </select>
+        <button id="btn-bom-new" class="btn-secondary btn-small" title="新建空白 BOM">🆕</button>
+        <button id="btn-bom-saveas" class="btn-secondary btn-small" title="另存为...">💾</button>
+        <button id="btn-bom-delete" class="btn-danger btn-small" title="删除当前 BOM">🗑</button>
+      </div>
+      <div class="toolbar">
+        <button id="btn-import" class="btn-primary">📥 从文本导入 BOM</button>
+        <button id="btn-add-row" class="btn-secondary">+ 添加行</button>
+        <button id="btn-clear-bom" class="btn-danger">清空</button>
+        <span style="margin-left:8px">批量状态:</span>
+        <select id="bulk-status" class="bulk-status-select">
+          <option value="">—</option>
+          <option value="pending">pending</option>
+          <option value="not_found">not_found</option>
+          <option value="priced">priced</option>
+        </select>
+        <button id="btn-bulk-status" class="btn-secondary">应用全部</button>
+        <span id="bom-stats" class="stats">0 个零件</span>
+      </div>
+
+      <!-- Import modal (hidden by default) -->
+      <div id="import-modal" class="modal hidden">
+        <div class="modal-content">
+          <h3>导入 BOM</h3>
+          <p class="hint">粘贴任意格式的 BOM（Markdown 表格 / CSV / 纯文本列表）</p>
+          <textarea id="import-textarea" rows="10" placeholder="# | Part | Qty | Spec
+---|------|-----|------
+1 | M3 hex standoff | 12 | 20mm, brass
+2 | WS2812B strip | 2 | 1m, 60 LED/m"></textarea>
+          <div class="modal-actions">
+            <button id="btn-parse" class="btn-primary">🤖 Agent 解析</button>
+            <button id="btn-cancel-import" class="btn-secondary">取消</button>
+          </div>
+          <div id="import-status" class="status-msg"></div>
+        </div>
+      </div>
+
+      <!-- Clarify dialog (hidden) -->
+      <div id="clarify-dialog" class="modal hidden">
+        <div class="modal-content">
+          <h3>Agent 需要确认</h3>
+          <p id="clarify-question"></p>
+          <textarea id="clarify-answer" rows="2" placeholder="你的回答..."></textarea>
+          <div class="modal-actions">
+            <button id="btn-clarify-send" class="btn-primary">发送</button>
+            <button id="btn-clarify-skip" class="btn-secondary">跳过，用 Agent 的猜测</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- BOM Table -->
+      <div class="table-wrap">
+        <table id="bom-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>零件名</th>
+              <th>数量</th>
+              <th>规格</th>
+              <th>状态</th>
+              <th>已标价</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="bom-tbody">
+            <tr class="empty-row"><td colspan="7">还没有零件。点击 "从文本导入" 或 "添加行"。</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ── Tab 2: Optimization ── -->
+    <section id="tab-optimize" class="tab-content">
+      <div class="toolbar">
+        <label>运费/平台: $<input type="number" id="shipping-cost" value="10.00" min="0" step="0.50" style="width:70px"></label>
+        <button id="btn-optimize" class="btn-primary">🔄 重新计算最优方案</button>
+      </div>
+      <div id="optimize-results" class="optimize-placeholder">
+        还没有方案。先确认 BOM 表中有已标价的零件，然后点击 "重新计算"。
+      </div>
+    </section>
+
+    <!-- ── Tab 3: Search Console ── -->
+    <section id="tab-console" class="tab-content">
+      <div class="toolbar">
+        <select id="site-select">
+          <option value="octopart">Octopart</option>
+        </select>
+        <button id="btn-search-start" class="btn-primary">▶ 启动搜索</button>
+        <button id="btn-search-pause" class="btn-secondary" disabled>⏸ 暂停</button>
+        <button id="btn-search-stop" class="btn-danger" disabled>■ 停止</button>
+      </div>
+      <div id="search-progress" class="search-progress hidden">
+        <div class="progress-bar"><div id="progress-bar-fill" class="progress-fill"></div></div>
+        <div class="progress-info">
+          <span id="progress-text">0/0 (0%)</span>
+          <span id="progress-current"></span>
+        </div>
+      </div>
+      <div id="console-output" class="console">
+        <div class="console-placeholder">就绪。选择网站并点击 "启动搜索"。</div>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="popup.js"></script>
+</body>
+</html>

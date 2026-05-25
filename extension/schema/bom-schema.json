@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "BOM",
+  "type": "object",
+  "required": ["version", "parts"],
+  "properties": {
+    "version": {"type": "string", "const": "1.0"},
+    "shipping_per_platform": {"type": "number", "default": 10.0},
+    "created_at": {"type": "string", "format": "date-time"},
+    "updated_at": {"type": "string", "format": "date-time"},
+    "parts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/part"
+      }
+    }
+  },
+  "$defs": {
+    "part": {
+      "type": "object",
+      "required": ["id", "name", "quantity", "status"],
+      "properties": {
+        "id": {"type": "string", "description": "UUID v4"},
+        "name": {"type": "string", "description": "零件名称"},
+        "quantity": {"type": "integer", "minimum": 1},
+        "specs": {
+          "type": "object",
+          "description": "规格要求 (key-value pairs)",
+          "additionalProperties": {"type": "string"}
+        },
+        "notes": {"type": "string", "description": "用户备注"},
+        "status": {
+          "type": "string",
+          "enum": ["pending", "searching", "priced", "not_found", "skipped"],
+          "description": "pending=待搜索, searching=搜索中, priced=已标价, not_found=未找到, skipped=已跳过"
+        },
+        "prices": {
+          "type": "object",
+          "description": "平台 → 单价 (USD)",
+          "additionalProperties": {"type": "number"}
+        },
+        "octopart_url": {"type": ["string", "null"]},
+        "selected_platform": {"type": ["string", "null"]}
+      }
+    }
+  }
+}
