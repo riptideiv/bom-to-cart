@@ -82,6 +82,16 @@
       const href = link?.getAttribute('href') || '';
       const name = header.textContent?.trim()?.substring(0, 120) || '';
 
+      // Extract specs from the div containing <em> (inside part-header)
+      let specs = '';
+      const divs = header.querySelectorAll('div');
+      for (const div of divs) {
+        if (div.querySelector('em')) {
+          specs = div.textContent.trim().substring(0, 400);
+          break;
+        }
+      }
+
       // Container: [0]=header, [1]=pricing-table, [2]=toolbar (with "Show All" button)
       const container = header.parentElement;
       const pricingTable = container?.children[1];
@@ -134,7 +144,7 @@
         }
       }
 
-      results.push({ href, name, pricing });
+      results.push({ href, name, specs, pricing });
     }
 
     return { url: window.location.href, results, total: results.length };

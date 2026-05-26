@@ -4,6 +4,17 @@
 // Path: /root/bom-to-cart-extension/background/search-loop.js
 
 import { BOMStore } from '/lib/bom-store.js';
+import { Agent } from '/lib/agent.js';
+
+const SELECT_PART_SYSTEM = `You are a part matching assistant for electronic component purchasing. Given a target BOM part with its specifications, and a list of search results with their descriptions, choose the best match.
+
+Rules:
+- Match based on specifications (voltage, package, pin count, tolerance, material, dimensions, etc.)
+- The part NAME should be the primary signal — prefer exact or close name matches
+- Secondary: compare specs descriptions against the target specs
+- If multiple results match, pick the first (lowest index)
+- If NO result convincingly matches the target, return index -1
+- Return ONLY a JSON object: {"index": <number>, "reason": "<one-line explanation>"}`;
 
 const STATES = {
   IDLE: 'idle',
@@ -209,10 +220,18 @@ export class SearchLoop {
       return;
     }
 
-    this.log('info', `搜索结果: ${data.results.length} 个匹配 → 自动选第一个`);
+    this.log('info', `搜索结果: ${data.results.length} 个匹配 → Agent 选择最佳`);
 
-    // Auto-select first result
-    const selected = data.results[0];
+    // Agent picks best match based on BOM specs
+    const selected = await this._selectBestResult(data.results);
+    if (!selected) {
+      this.log('warn', 'Agent 未找到匹配零件');
+      this._lastError = { step: STATES.GET_RESULTS, error: 'No matching result found by agent' };
+      this._transition(STATES.AGENT_FALLBACK);
+      return;
+    }
+
+    this.log('info', `Agent 选择: ${selected.name.substring(0, 60)}`);
     this._selectedUrl = selected.href;
 
     // If search results include inline pricing, skip to save
@@ -227,6 +246,56 @@ export class SearchLoop {
     this.log('warn', '搜索结果无价格数据');
     this._lastError = { step: STATES.GET_RESULTS, error: 'No pricing in search results' };
     this._transition(STATES.AGENT_FALLBACK);
+  }
+
+  /** Ask Agent to pick the best-matching search result for the current BOM part. */
+  async _selectBestResult(results) {
+    if (!results || results.length === 0) return null;
+    if (results.length === 1) return results[0]; // no choice needed
+
+    const partSpecs = this.currentPart?.specs || {};
+    const specsStr = Object.keys(partSpecs).length > 0
+      ? Object.entries(partSpecs).map(([k, v]) => `${k}: ${v}`).join(', ')
+      : 'none';
+
+    const resultsList = results.map((r, i) => ({
+      index: i,
+      name: r.name,
+      specs: r.specs || '(no description)'
+    }));
+
+    const userMsg = [
+      `Target part: ${this.currentPart?.name || 'unknown'}`,
+      `Target specs: ${specsStr}`,
+      `Search results:`,
+      JSON.stringify(resultsList, null, 2)
+    ].join('\n');
+
+    let resp;
+    try {
+      resp = await Agent.call({
+        systemPrompt: SELECT_PART_SYSTEM,
+        userMessage: userMsg,
+        jsonMode: true,
+        temperature: 0.1
+      });
+    } catch (e) {
+      this.log('warn', `Agent 选择失败: ${e.message}，回退到第一个结果`);
+      return results[0];
+    }
+
+    try {
+      const choice = JSON.parse(resp.content);
+      if (choice.index >= 0 && choice.index < results.length) {
+        this.log('info', `Agent 选择 #${choice.index}: ${choice.reason}`);
+        return results[choice.index];
+      }
+      this.log('warn', `Agent 认为无匹配 (index=${choice.index})`);
+      return null;
+    } catch {
+      this.log('warn', 'Agent 返回格式异常，回退到第一个结果');
+      return results[0];
+    }
   }
 
   async _savePrices() {
