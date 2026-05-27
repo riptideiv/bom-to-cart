@@ -2,6 +2,12 @@
 
 > Chrome Extension — Parse any BOM, search real-time prices on Octopart, and find the cheapest purchasing plan. AI agent handles the thinking; the extension handles the clicking.
 
+## Disclaimer
+
+This project is an independent browser automation tool for personal use and educational purposes.
+
+Users are responsible for complying with the Terms of Service of any websites they interact with. This project does not bypass CAPTCHAs, authentication systems, or anti-bot protections.
+
 ## What It Does
 
 1. **Parse** — Paste your BOM in any format (markdown table, CSV, plain text). An AI agent extracts parts, quantities, and specs into a standardized table.
@@ -19,10 +25,10 @@
 ```
 ┌──────────────────────────────────────────────┐
 │  Chrome Extension (Popup Dashboard)          │
-│  ┌─────────┐ ┌──────────┐ ┌───────────────┐ │
-│  │ BOM 表  │ │ 最优方案  │ │ 搜索控制台     │ │
-│  └────┬────┘ └────┬─────┘ └───────┬───────┘ │
-│       └───────────┼───────────────┘          │
+│  ┌───────┐ ┌────────────┐ ┌────────────────┐ │
+│  │ BOM   │ │ Optimizer  │ │ Search Monitor │ │
+│  └────┬──┘ └──────┬─────┘ └────────┬───────┘ │
+│       └───────────┼────────────────┘         │
 │                   │ chrome.runtime           │
 │            ┌──────▼──────┐                   │
 │            │  Background │                   │
@@ -30,20 +36,18 @@
 │            └──────┬──────┘    (AI Agent)     │
 │                   │                          │
 │            ┌──────▼──────┐                   │
-│            │   Content   │                   │
-│            │   Scripts   │──► Octopart.com   │
+│            │   Content   │──►  Search        │
+│            │   Scripts   │      Macro        │
 │            └─────────────┘                   │
 └──────────────────────────────────────────────┘
 ```
-
-The AI agent calls OpenRouter directly — **no Hermes gateway dependency**. Each agent invocation is stateless and short-lived (parse a BOM, handle a browser exception, etc.).
 
 ## Installation
 
 1. Clone the repo or download the `extension/` directory
 2. Go to `chrome://extensions/`, enable **Developer mode**
 3. Click **Load unpacked** → select the `extension/` folder
-4. Right-click the extension icon → **Options** → set your OpenRouter API key
+4. Right-click the extension icon → **Options** → set your OpenRouter API key and desired model
 5. Done. Click the icon to open the dashboard.
 
 Get an OpenRouter API key at [openrouter.ai/keys](https://openrouter.ai/keys).
@@ -110,7 +114,6 @@ bom-to-cart/
 
 | Limitation | Workaround |
 |-----------|------------|
-| **Octopart CAPTCHA** — PerimeterX fires after ~5-6 searches | Extension pauses, notifies you to solve. Expect 1-2 interruptions per 10-part BOM. |
 | **Generic parts** — Screws, nuts, wire, buttons not indexed | Marked as "not found." Add AliExpress/Amazon prices manually. |
 | **Shipping assumption** — Defaults to $10/platform | Override in optimal plan tab. |
 
