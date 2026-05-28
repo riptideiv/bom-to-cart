@@ -150,21 +150,34 @@ bom-to-cart/
 
 ## Changelog
 
-### v0.2.0 (2026-05-25) — Phase 3: Search Loop
+### v0.3.1 (2026-05-28)
 
-- **State-machine search loop** — 9-state flow with CAPTCHA pause/resume and agent-powered exception handling
-- **Direct search-result extraction** — no detail-page navigation needed; pricing extracted from inline `[data-testid="offer-row"]` cells
-- **Auto-clicks "Show All"** per search result before extraction
-- **Bulk status reset** — debug utility in BOM toolbar
-- **Dynamic distributor columns** — each distributor gets its own column in the BOM table
-- **Popup reconnection sync** — reopening popup immediately restores console state
-- Various bug fixes (infinite retry loop, swallowed CS errors, missing adapter methods)
+- **Price deletion** — hover any price cell in the BOM table to reveal a ✕ button; delete individual distributor price entries without removing the part
+- **Agent strictness control** — choose "严格" (strict — requires same component type + matching specs), "标准" (normal), or "宽松" (loose — accepts partial matches) when searching. Prevents the agent from matching keyboard switches to cable/keycap search results
+- **Side panel** — extension now opens as a persistent Chrome side panel instead of a popup; stays visible while you browse Octopart
+- **File logging** — background search logs written to `logs/` for debugging
+- **Fixed** progress bar denominator growing with numerator (0/9 → 1/10 → … now 0/9 → 1/9 → …)
+
+### v0.3.0 (2026-05-28)
+
+- **Optimal plan tab** — combinatorial optimizer finds top 5 cheapest purchasing plans across distributors, balancing unit price vs per-platform shipping. Exhaustive search (≤20 platforms) or greedy (>20).
+- Plan cards show per-part breakdown tables with distributor, unit price, and subtotal
+- Configurable per-platform shipping cost
+
+### v0.2.0 (2026-05-25)
+
+- **Automated search** — searches Octopart for each BOM part, auto-clicks "Show All" per result, extracts pricing from inline offer rows without navigating to detail pages
+- **Agent-based result matching** — AI agent selects the best matching search result for each BOM part based on name and specifications
+- **CAPTCHA handling** — pauses search, opens the page for manual verification, resumes on click
+- **Real-time console** — live progress bar, per-part status updates, reopen popup to restore state
+- **Dynamic distributor columns** — table columns auto-generated from discovered distributors
+- Bulk status reset in BOM toolbar
 
 ### v0.1.0 (2026-05-23)
 
 - **Rewritten as Chrome Extension** (was a Hermes skill)
 - Independent AI agent via OpenRouter API (no gateway dependency)
-- Popup dashboard with 3 tabs: BOM table, optimal plans, search console
+- Dashboard with 3 tabs: BOM table, optimal plans, search console
 - BOM JSON Schema v1.0 with standardized part format
 - Octopart content script with atomic search operations
 - Agent-based BOM parsing from any text format
