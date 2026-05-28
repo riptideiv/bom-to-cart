@@ -59,10 +59,41 @@ Get an OpenRouter API key at [openrouter.ai/keys](https://openrouter.ai/keys).
 Open the dashboard → **BOM 表** tab → **从文本导入** → paste your BOM:
 
 ```
-Part    | Qty | Spec
-M3 hex standoff | 12 | 20mm, brass
-WS2812B strip  |  2 | 1m, 60 LED/m
-JST-XH connector | 3 | 2-pin, right angle
+Part                          | Qty | Spec
+M3 hex standoff               | 12  | 20mm, brass
+WS2812B LED strip             | 2   | 1m, 60 LED/m, IP30
+JST-XH connector              | 3   | 2-pin, right angle
+USB-C breakout board          | 4   | 5V PD trigger
+XT60 connector pair           | 5   | male + female
+Heat shrink tubing kit        | 1   | assorted diameters
+18 AWG silicone wire          | 10m | red/black
+PLA filament                  | 2   | black, 1kg spool
+Acrylic sheet                 | 3   | clear, 300x300x3mm
+Birch plywood plank           | 4   | 1/4in x 6in x 24in
+Aluminum angle bracket        | 12  | 20x20mm L connector
+Corner brace                  | 8   | stainless steel, 90 degree
+Wood screw assortment         | 1   | #6 and #8
+Self-tapping screws           | 50  | M3 x 8mm
+VHB double-sided tape         | 2   | 20mm width
+Rubber feet                   | 16  | adhesive, black
+Vinyl sticker paper           | 2   | waterproof, inkjet compatible
+Printable holographic vinyl   | 1   | A4 sheets
+Neodymium magnet              | 20  | 10mm x 2mm disc
+Mini caster wheel             | 4   | swivel, 1in
+Drawer slide rail             | 2   | 12in soft-close
+Foam padding sheet            | 3   | EVA, 5mm thick
+Pegboard hook set             | 1   | assorted sizes
+Zip ties                      | 200 | black, 8in
+Velcro cable straps           | 20  | reusable
+Microfiber cloth pack         | 2   | lint-free
+Isopropyl alcohol             | 1   | 99%, 500mL
+Cutting mat                   | 1   | A3 self-healing
+Precision hobby knife         | 1   | aluminum handle
+Super glue gel                | 3   | medium viscosity
+Spray paint                   | 2   | matte black
+Masking tape                  | 4   | painter's tape, 1in
+Storage organizer bin         | 6   | stackable, small
+Label maker tape              | 3   | 12mm black on white
 ```
 
 Click **Agent 解析** — the agent extracts parts, flags ambiguities, and populates the table. Edit anything inline if needed.
