@@ -3,19 +3,22 @@
   "name": "BOM-to-Cart",
   "version": "0.1.0",
   "description": "AI-powered BOM purchasing assistant — parse, price, optimize",
-  "permissions": ["storage", "activeTab", "scripting", "notifications"],
+  "permissions": ["storage", "activeTab", "scripting", "notifications", "sidePanel"],
   "host_permissions": [
     "https://octopart.com/*",
-    "https://openrouter.ai/*"
+    "https://openrouter.ai/*",
+    "http://127.0.0.1:8666/*"
   ],
   "action": {
-    "default_popup": "popup/popup.html",
-    "default_title": "BOM-to-Cart",
+    "default_title": "BOM-to-Cart — 点击打开侧边栏",
     "default_icon": {
       "16": "icons/icon-16.png",
       "48": "icons/icon-48.png",
       "128": "icons/icon-128.png"
     }
+  },
+  "side_panel": {
+    "default_path": "popup/popup.html"
   },
   "background": {
     "service_worker": "background/background.js",

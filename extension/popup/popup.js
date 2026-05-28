@@ -461,7 +461,7 @@ function updateSearchButtons(status) {
   if (isActive) {
     progressEl.classList.remove('hidden');
     const p = status.progress || {};
-    const total = p.total + (p.done || 0) || 1;
+    const total = p.total || 1;
     const done = p.done || 0;
     const pct = Math.round((done / total) * 100);
     document.getElementById('progress-bar-fill').style.width = pct + '%';
@@ -527,7 +527,7 @@ async function renderOptimizeTab() {
   const el = document.getElementById('optimize-results');
   const stats = await chrome.runtime.sendMessage({ type: 'bom:stats' });
   if (!stats) {
-    el.innerHTML = '<div class="optimize-placeholder">无法加载数据 (SW 未响应)</div>';
+    el.innerHTML = '<div class="optimize-placeholder error">无法加载数据 (SW 未响应)</div>';
     return;
   }
 
@@ -536,11 +536,64 @@ async function renderOptimizeTab() {
     return;
   }
 
-  // Placeholder — will call optimizer in Phase 4
-  el.innerHTML = `<div class="optimize-placeholder">
-    ${stats.priced} 个零件已标价。优化器将在 Phase 4 实现。<br>
-    届时将调用独立 Agent 运行组合优化，点击 "重新计算" 即可。
+  el.innerHTML = '<div class="optimize-placeholder loading">计算中...</div>';
+
+  const shipping = parseFloat(document.getElementById('shipping-cost')?.value) || 10;
+  const result = await chrome.runtime.sendMessage({
+    type: 'optimize:run',
+    payload: { shipping }
+  });
+
+  if (!result || result.error === 'No BOM loaded') {
+    el.innerHTML = '<div class="optimize-placeholder error">优化失败: SW 未响应</div>';
+    return;
+  }
+
+  if (result.error) {
+    el.innerHTML = `<div class="optimize-placeholder error">${escHtml(result.error)}</div>`;
+    return;
+  }
+
+  // Render plans
+  const plans = result.plans || [];
+  if (!plans.length) {
+    el.innerHTML = '<div class="optimize-placeholder">优化器未生成任何方案。请确认零件有价格数据。</div>';
+    return;
+  }
+
+  const header = `<div class="optimize-meta">
+    算法: ${result.algorithm} · ${result.priced_parts} 个零件 · ${result.total_platforms_considered} 个经销商
+    ${result.warning ? `<br><span class="warn">⚠ ${escHtml(result.warning)}</span>` : ''}
   </div>`;
+
+  const plansHtml = plans.map(p => {
+    const distCols = p.platforms_used.map(d => `<span class="plan-dist">${escHtml(d)}</span>`).join(' ');
+    const rows = p.breakdown.map(b => `
+      <tr>
+        <td>${escHtml(b.part)}</td>
+        <td>${b.quantity}</td>
+        <td>${escHtml(b.platform)}</td>
+        <td class="num">$${b.unit_price.toFixed(2)}</td>
+        <td class="num">$${b.subtotal.toFixed(2)}</td>
+      </tr>
+    `).join('');
+
+    return `
+      <div class="plan-card">
+        <div class="plan-header">
+          <span class="plan-rank">#${p.rank}</span>
+          <span class="plan-total">$${p.total.toFixed(2)}</span>
+          <span class="plan-detail">零件 $${p.parts_cost} + 运费 $${p.shipping} (${p.num_platforms} 个平台)</span>
+        </div>
+        <div class="plan-platforms">${distCols}</div>
+        <table class="plan-table">
+          <thead><tr><th>零件</th><th>数量</th><th>平台</th><th>单价</th><th>小计</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
+  }).join('');
+
+  el.innerHTML = header + plansHtml;
 }
 
 // Bind optimize button

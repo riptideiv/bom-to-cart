@@ -262,8 +262,24 @@ td input.inline-qty { width: 50px; text-align: center; }
   margin-bottom: 8px;
 }
 .plan-card .rank { font-weight: 700; }
-.plan-card .rank-1 { color: #f1c40f; }
+.plan-rank { font-weight: 700; font-size: 14px; color: #f1c40f; }
+.plan-total { font-size: 18px; font-weight: 700; color: var(--success); margin: 0 8px; }
+.plan-detail { font-size: 11px; color: var(--text-secondary); }
+.plan-platforms { margin: 4px 0; }
+.plan-dist { display: inline-block; background: var(--surface); padding: 2px 6px; border-radius: 4px; font-size: 10px; margin: 2px; }
 .plan-card .total { font-size: 16px; font-weight: 700; color: var(--success); }
 .plan-card .platforms { color: var(--text-secondary); font-size: 11px; }
 .plan-card .cost-breakdown { font-size: 11px; color: var(--text-secondary); }
 .plan-card table { margin-top: 6px; }
+
+.optimize-meta { font-size: 11px; color: var(--text-secondary); margin-bottom: 12px; }
+.optimize-meta .warn { color: #f39c12; }
+.optimize-placeholder.loading { color: var(--text-secondary); font-style: italic; }
+.optimize-placeholder.error { color: var(--primary); }
+
+.plan-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+.plan-table th { font-size: 10px; padding: 4px 6px; text-align: left; border-bottom: 1px solid var(--border); }
+.plan-table td { padding: 3px 6px; border-bottom: 1px solid rgba(15,52,96,0.3); }
+.plan-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+
+.num { text-align: right; font-variant-numeric: tabular-nums; }

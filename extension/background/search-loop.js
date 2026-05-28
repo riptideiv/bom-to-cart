@@ -179,7 +179,7 @@ export class SearchLoop {
     // Mark as searching
     await BOMStore.updatePart(this.currentPart.id, { status: 'searching' });
 
-    this.log('info', `开始搜索: ${this.currentPart.name} (${this.progress.current}/${this.progress.total + this.progress.done + 1})`);
+    this.log('info', `开始搜索: ${this.currentPart.name} (${this.progress.current}/${this.progress.total})`);
     this._transition(STATES.SEARCHING);
   }
 

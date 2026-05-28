@@ -6,6 +6,7 @@ import { BOMStore } from '/lib/bom-store.js';
 import { Agent } from '/lib/agent.js';
 import { SearchLoop } from '/background/search-loop.js';
 import { getAdapter } from '/lib/adapters/registry.js';
+import { optimize } from '/lib/optimizer.js';
 
 // ── Search Loop State ──────────────────────────────────────
 let currentLoop = null;
@@ -132,6 +133,11 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     case 'search:status':
       sendResponse(currentLoop ? currentLoop.getStatus() : { state: 'idle' });
       return false;
+
+    // ── Optimizer ────────────────────────────────────────────
+    case 'optimize:run':
+      safeHandler(() => handleOptimize(payload));
+      return true;
 
     case 'captcha:detected':
       handleCaptchaDetected(payload, sender);
@@ -310,15 +316,23 @@ async function handleSearchStart({ site }, sender) {
   // Wire callbacks
   currentLoop.onLog((entry) => {
     // Push log to any open popup
-    chrome.runtime.sendMessage({ type: 'search:log', data: entry }).catch(() => {});
+    chrome.runtime.sendMessage({ type: 'search:log', data: entry }).catch(() => { });
+
+    // Also send to local log server for filesystem persistence
+    const enriched = { ...entry, part: currentLoop?.currentPart?.name || '' };
+    fetch('http://127.0.0.1:8666/log', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(enriched)
+    }).catch(() => { });
   });
 
   currentLoop.onStateChange((status) => {
-    chrome.runtime.sendMessage({ type: 'search:state-change', data: status }).catch(() => {});
+    chrome.runtime.sendMessage({ type: 'search:state-change', data: status }).catch(() => { });
   });
 
   currentLoop.onCaptcha(() => {
-    chrome.runtime.sendMessage({ type: 'search:captcha', data: {} }).catch(() => {});
+    chrome.runtime.sendMessage({ type: 'search:captcha', data: {} }).catch(() => { });
     // System notification — visible even when popup is closed
     try {
       chrome.notifications.create('captcha-' + Date.now(), {
@@ -328,13 +342,13 @@ async function handleSearchStart({ site }, sender) {
         message: `${adapter.name} 需要人机验证，请打开页面完成验证后在搜索控制台点"继续"。`,
         priority: 2
       });
-    } catch {}
+    } catch { }
   });
 
   // Fire and forget — search runs independently
   currentLoop.start().catch(err => {
     console.error('[SearchLoop] Fatal error:', err);
-    chrome.runtime.sendMessage({ type: 'search:state-change', data: { state: 'done', error: err.message } }).catch(() => {});
+    chrome.runtime.sendMessage({ type: 'search:state-change', data: { state: 'done', error: err.message } }).catch(() => { });
   });
 
   return { ok: true, message: `Search started on ${adapter.name}` };
@@ -349,9 +363,9 @@ function handleCaptchaDetected(payload, sender) {
   chrome.runtime.sendMessage({
     type: 'search:captcha',
     data: { indicators: payload.indicators, url: payload.url }
-  }).catch(() => {});
+  }).catch(() => { });
 
-// System notification
+  // System notification
   try {
     chrome.notifications.create('captcha-' + Date.now(), {
       type: 'basic',
@@ -360,7 +374,7 @@ function handleCaptchaDetected(payload, sender) {
       message: '人机验证已触发，请在页面完成验证后在搜索控制台点击"继续"。',
       priority: 2
     });
-  } catch {}
+  } catch { }
 
   // Pause the search loop — it will wait
   currentLoop.pause();
@@ -515,6 +529,33 @@ async function handleBOMDelete({ id }) {
 
   return { ok: true };
 }
+
+// ── Optimizer ────────────────────────────────────────────────
+
+async function handleOptimize({ shipping }) {
+  const bom = await BOMStore.load();
+  if (!bom) throw new Error('No BOM loaded');
+
+  const parts = bom.parts.map(p => ({
+    name: p.name,
+    quantity: p.quantity,
+    prices: p.prices || {},
+  }));
+
+  return optimize({
+    parts,
+    shipping_per_platform: shipping || Number(bom.shipping_per_platform) || 10,
+    top_n: 5,
+  });
+}
+
+// ── Side Panel ────────────────────────────────────────────────
+
+// Clicking the extension icon opens the side panel (persistent, doesn't interfere with tabs)
+chrome.action.onClicked.addListener(async (tab) => {
+  await chrome.sidePanel.open({ windowId: tab.windowId });
+});
+
 self.addEventListener('error', (e) => {
   console.error('[BOM-to-Cart] SW unhandled error:', e.error || e.message);
 });
