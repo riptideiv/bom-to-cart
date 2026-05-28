@@ -79,6 +79,19 @@ export const BOMStore = {
     await this.save(bom);
   },
 
+  /** Delete a specific distributor price from a part. */
+  async deletePrice(partId, distributor) {
+    const bom = await this.load();
+    if (!bom) throw new Error('No BOM loaded');
+    const part = bom.parts.find(p => p.id === partId);
+    if (!part) throw new Error(`Part ${partId} not found`);
+    if (part.prices && part.prices[distributor] !== undefined) {
+      delete part.prices[distributor];
+    }
+    await this.save(bom);
+    return part;
+  },
+
   /** Replace entire parts array. Used after agent returns parsed BOM. */
   async replaceParts(parts) {
     const bom = (await this.load()) || (await this.createNew());

@@ -58,6 +58,10 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       safeHandler(() => BOMStore.removePart(payload));
       return true;
 
+    case 'bom:delete-price':
+      safeHandler(() => BOMStore.deletePrice(payload.partId, payload.distributor));
+      return true;
+
     case 'bom:replace-parts':
       safeHandler(() => BOMStore.replaceParts(payload));
       return true;
@@ -272,7 +276,7 @@ async function handleException({ step, error, url, pageInfo }) {
 
 // ── Search Loop Handlers ───────────────────────────────────
 
-async function handleSearchStart({ site }, sender) {
+async function handleSearchStart({ site, matchStrictness }, sender) {
   if (currentLoop && currentLoop.getStatus().state !== 'done') {
     throw new Error('Search loop already running. Stop it first.');
   }
@@ -310,6 +314,7 @@ async function handleSearchStart({ site }, sender) {
   currentLoop = new SearchLoop(adapter, {
     stepDelay: 3000,
     maxRetries: 2,
+    matchStrictness: matchStrictness || 'normal',
     onAgentException: (payload) => handleException(payload)
   });
 

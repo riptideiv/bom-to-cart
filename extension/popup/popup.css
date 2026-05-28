@@ -134,6 +134,17 @@ tr:hover td { background: rgba(233,69,96,0.05); }
 .price-cell { text-align: right; font-variant-numeric: tabular-nums; font-size: 11px; white-space: nowrap; }
 .price-cell.empty { color: var(--text-secondary); }
 
+.price-del {
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 10px;
+  margin-left: 4px;
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s;
+}
+.price-cell:hover .price-del { opacity: 1; }
+.price-del:hover { color: var(--danger); }
+
 td input {
   width: 100%;
   background: transparent;

@@ -165,7 +165,13 @@ async function renderBOMTable() {
     const specsStr = p.specs ? Object.entries(p.specs).map(([k, v]) => `${k}: ${v}`).join(', ') : '';
     const distCells = allDistributors.map(d => {
       const v = p.prices?.[d];
-      return v !== undefined ? `<td class="price-cell">$${Number(v).toFixed(2)}</td>` : '<td class="price-cell empty">—</td>';
+      if (v !== undefined) {
+        return `<td class="price-cell" data-part-id="${p.id}" data-dist="${escAttr(d)}">
+          $${Number(v).toFixed(2)}
+          <span class="price-del" title="删除此价格">✕</span>
+        </td>`;
+      }
+      return '<td class="price-cell empty">—</td>';
     }).join('');
 
     return `
@@ -193,6 +199,19 @@ async function renderBOMTable() {
     btn.addEventListener('click', async () => {
       if (!confirm('删除这个零件？')) return;
       await chrome.runtime.sendMessage({ type: 'bom:remove-part', payload: btn.dataset.id });
+      await renderBOMTable();
+    });
+  });
+
+  // Price deletion
+  tbody.querySelectorAll('.price-del').forEach(span => {
+    span.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const cell = span.closest('.price-cell');
+      const partId = cell.dataset.partId;
+      const dist = cell.dataset.dist;
+      if (!confirm(`删除 ${dist} 的价格？`)) return;
+      await chrome.runtime.sendMessage({ type: 'bom:delete-price', payload: { partId, distributor: dist } });
       await renderBOMTable();
     });
   });
@@ -399,6 +418,7 @@ function startSearchPolling() {
 
 async function handleSearchStart() {
   const site = document.getElementById('site-select').value;
+  const matchStrictness = document.getElementById('match-strictness').value;
   const out = document.getElementById('console-output');
 
   const configured = await chrome.runtime.sendMessage({ type: 'agent:is-configured' });
@@ -422,7 +442,7 @@ async function handleSearchStart() {
   document.getElementById('search-progress').classList.remove('hidden');
 
   try {
-    const resp = await chrome.runtime.sendMessage({ type: 'search:start', payload: { site } });
+    const resp = await chrome.runtime.sendMessage({ type: 'search:start', payload: { site, matchStrictness } });
     if (resp.error) throw new Error(resp.error);
 
     _searchRunning = true;

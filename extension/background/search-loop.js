@@ -6,7 +6,18 @@
 import { BOMStore } from '/lib/bom-store.js';
 import { Agent } from '/lib/agent.js';
 
-const SELECT_PART_SYSTEM = `You are a part matching assistant for electronic component purchasing. Given a target BOM part with its specifications, and a list of search results with their descriptions, choose the best match.
+const SELECT_PART_PROMPTS = {
+  strict: `You are a precise part matching assistant for electronic component purchasing. Given a target BOM part with its specifications, and a list of search results with their descriptions, find an EXACT match.
+
+Rules:
+- The part NAME must closely match the search result name — same core component type (e.g., both are "keyboard switches", not "keycaps" or "cables")
+- All critical specifications (voltage, package, value, tolerance, material, dimensions, connector type, etc.) MUST align between target and result
+- If there is ANY significant mismatch in the fundamental component type or key specs, return index -1
+- It is BETTER to return -1 (no match) than to pick a wrong part
+- If multiple results are exact matches, pick the first (lowest index)
+- Return ONLY a JSON object: {"index": <number>, "reason": "<one-line explanation>"}`,
+
+  normal: `You are a part matching assistant for electronic component purchasing. Given a target BOM part with its specifications, and a list of search results with their descriptions, choose the best match.
 
 Rules:
 - Match based on specifications (voltage, package, pin count, tolerance, material, dimensions, etc.)
@@ -14,7 +25,18 @@ Rules:
 - Secondary: compare specs descriptions against the target specs
 - If multiple results match, pick the first (lowest index)
 - If NO result convincingly matches the target, return index -1
-- Return ONLY a JSON object: {"index": <number>, "reason": "<one-line explanation>"}`;
+- Return ONLY a JSON object: {"index": <number>, "reason": "<one-line explanation>"}`,
+
+  loose: `You are a part matching assistant. Given a target BOM part and a list of search results, pick the best available match.
+
+Rules:
+- Prefer name matches, but accept partial or similar names — a "USB-C connector" can match "USB Type-C receptacle"
+- If specs partially match, that's good enough
+- Pick the BEST available result even if not perfectly matched
+- Only return -1 if ALL results are completely unrelated (entirely different component type)
+- If multiple results are plausible candidates, pick the first (lowest index)
+- Return ONLY a JSON object: {"index": <number>, "reason": "<one-line explanation>"}`
+};
 
 const STATES = {
   IDLE: 'idle',
@@ -41,6 +63,7 @@ export class SearchLoop {
     this.state = STATES.IDLE;
     this.stepDelay = options.stepDelay || 2000;
     this.maxRetries = options.maxRetries || 2;
+    this.matchStrictness = options.matchStrictness || 'normal';
     this._onAgentException = options.onAgentException || null;
 
     this.currentPart = null;
@@ -274,7 +297,7 @@ export class SearchLoop {
     let resp;
     try {
       resp = await Agent.call({
-        systemPrompt: SELECT_PART_SYSTEM,
+        systemPrompt: SELECT_PART_PROMPTS[this.matchStrictness] || SELECT_PART_PROMPTS.normal,
         userMessage: userMsg,
         jsonMode: true,
         temperature: 0.1
