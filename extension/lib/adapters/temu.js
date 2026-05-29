@@ -39,12 +39,21 @@ export class TemuAdapter extends SiteAdapter {
     }
   }
 
-  /** Wait for the tab to fully load and content script to be injected. */
+  /** Wait for the tab to fully load and content script to be injected.
+   *  Detects CAPTCHA redirect early to avoid unnecessary timeout. */
   async _waitForTab() {
     for (let i = 0; i < 20; i++) {
       try {
         const tab = await chrome.tabs.get(this.tabId);
         if (!tab) throw new Error('Tab not found');
+
+        // Early detection: CAPTCHA redirect — return immediately so search-loop can handle it
+        const url = tab.url || '';
+        if (url.includes('bgn_verification.html')) {
+          console.log('[TemuAdapter] CAPTCHA redirect detected, returning early');
+          return;
+        }
+
         if (tab.status === 'complete') {
           const snap = await this._send('temu:getPageSnapshot', {}, 3);
           if (snap && snap.url) return;
