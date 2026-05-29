@@ -56,7 +56,6 @@
     await sleep(500);
 
     // Press Enter — full keydown/keypress/keyup sequence
-    // Temu's React handlers may need isTrusted-like behavior; we try multiple approaches
     const enterOpts = { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true, cancelable: true };
     input.dispatchEvent(new KeyboardEvent('keydown', enterOpts));
     input.dispatchEvent(new KeyboardEvent('keypress', enterOpts));
@@ -68,7 +67,24 @@
       try { form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })); } catch {}
     }
 
-    return { action: 'search', query };
+    // Wait for results to appear (up to 15s).
+    // Temu is a SPA — no full page reload, results render dynamically.
+    const start = Date.now();
+    while (Date.now() - start < 15000) {
+      // Check for CAPTCHA redirect
+      if (window.location.href.includes('bgn_verification.html')) {
+        return { action: 'search', query, captcha: true };
+      }
+      // Check for search result cards
+      const card = document.querySelector('[role="group"]');
+      if (card) {
+        return { action: 'search', query };
+      }
+      await sleep(500);
+    }
+
+    // Timeout — results never appeared
+    return { action: 'search', query, timedOut: true };
   }
 
   // ── Extract Search Results ────────────────────────────────

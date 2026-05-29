@@ -69,9 +69,14 @@ export class TemuAdapter extends SiteAdapter {
   // ── Search primitives ─────────────────────────────────────
 
   async search(query) {
-    await this._send('temu:search', { query }, 3);
-    await this._waitForTab();
-    return { action: 'navigate', query };
+    try {
+      return await this._send('temu:search', { query }, 3);
+    } catch {
+      // Page reloaded (content script unloaded) — wait for new page to settle
+      // Subsequent detectCaptcha/getSearchResults will use their own _send retries
+      await new Promise(r => setTimeout(r, 5000));
+      return { action: 'search', query };
+    }
   }
 
   async getSearchResults() {
