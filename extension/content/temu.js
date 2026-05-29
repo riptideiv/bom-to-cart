@@ -31,10 +31,35 @@
 
   // ── Search ────────────────────────────────────────────────
   async function doSearch(query) {
-    const url = `${SEARCH_URL}?search_key=${encodeURIComponent(query)}`;
-    window.location.href = url;
-    // Content script will re-inject after navigation
-    return { action: 'navigate', url };
+    // Wait for the search input to be available
+    let input;
+    try {
+      input = await waitFor('#searchInput', 10000);
+    } catch {
+      // If search input isn't visible (e.g., on homepage with different layout),
+      // fall back to URL navigation
+      window.location.href = `https://www.temu.com/search_result.html?search_key=${encodeURIComponent(query)}`;
+      return { action: 'navigate', query };
+    }
+
+    // Focus and clear the search input
+    input.focus();
+    input.value = '';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+
+    await sleep(500);
+
+    // Type the query character by character for reliable input
+    input.value = query;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+
+    await sleep(500);
+
+    // Press Enter to submit the search
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', keyCode: 13, bubbles: true }));
+    input.dispatchEvent(new KeyboardEvent('keypress', { key: 'Enter', code: 'Enter', keyCode: 13, bubbles: true }));
+
+    return { action: 'search', query };
   }
 
   // ── Extract Search Results ────────────────────────────────
