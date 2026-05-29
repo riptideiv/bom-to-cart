@@ -49,15 +49,24 @@
 
     await sleep(500);
 
-    // Type the query character by character for reliable input
+    // Type the query
     input.value = query;
     input.dispatchEvent(new Event('input', { bubbles: true }));
 
     await sleep(500);
 
-    // Press Enter to submit the search
-    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', keyCode: 13, bubbles: true }));
-    input.dispatchEvent(new KeyboardEvent('keypress', { key: 'Enter', code: 'Enter', keyCode: 13, bubbles: true }));
+    // Press Enter — full keydown/keypress/keyup sequence
+    // Temu's React handlers may need isTrusted-like behavior; we try multiple approaches
+    const enterOpts = { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true, cancelable: true };
+    input.dispatchEvent(new KeyboardEvent('keydown', enterOpts));
+    input.dispatchEvent(new KeyboardEvent('keypress', enterOpts));
+    input.dispatchEvent(new KeyboardEvent('keyup', enterOpts));
+
+    // Fallback: submit enclosing form
+    const form = input.closest('form');
+    if (form) {
+      try { form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })); } catch {}
+    }
 
     return { action: 'search', query };
   }
