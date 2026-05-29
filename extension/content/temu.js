@@ -55,6 +55,9 @@
 
     await sleep(500);
 
+    // Save current URL to verify navigation happened
+    const beforeUrl = window.location.href;
+
     // Press Enter — full keydown/keypress/keyup sequence
     const enterOpts = { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true, cancelable: true };
     input.dispatchEvent(new KeyboardEvent('keydown', enterOpts));
@@ -83,7 +86,11 @@
       await sleep(500);
     }
 
-    // Timeout — results never appeared
+    // Timeout: check if navigation happened at all
+    if (window.location.href === beforeUrl && !document.querySelector('[role="group"]')) {
+      return { error: `搜索未生效 — 页面没有变化 (Enter 可能未被处理)` };
+    }
+
     return { action: 'search', query, timedOut: true };
   }
 

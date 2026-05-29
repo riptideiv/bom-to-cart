@@ -71,9 +71,15 @@ export class TemuAdapter extends SiteAdapter {
   async search(query) {
     try {
       return await this._send('temu:search', { query }, 3);
-    } catch {
+    } catch (err) {
+      const msg = err.message || '';
+      // Content script returned an error (e.g., Enter not working) — propagate it
+      if (!msg.includes('Receiving end does not exist') &&
+          !msg.includes('Could not establish connection') &&
+          !msg.includes('message port closed')) {
+        throw err;
+      }
       // Page reloaded (content script unloaded) — wait for new page to settle
-      // Subsequent detectCaptcha/getSearchResults will use their own _send retries
       await new Promise(r => setTimeout(r, 5000));
       return { action: 'search', query };
     }
