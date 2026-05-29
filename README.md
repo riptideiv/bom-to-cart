@@ -1,4 +1,4 @@
-# 🛒 BOM-to-Cart
+# BOM-to-Cart
 
 > Chrome Extension — Parse any BOM, search real-time prices on Octopart, and find the cheapest purchasing plan. AI agent handles the thinking; the extension handles the clicking.
 
