@@ -82,11 +82,12 @@
         // Clean: Temu titles append "在新标签页中打开。" — strip it
         name = name.replace(/\s*在新标签页中打开。\s*$/, '').substring(0, 200);
 
-        // Price
+        // Price — use the _2XgTiMJi span (avoids aria-hidden duplicate content in [data-type="price"])
         let price = null;
-        const priceEl = card.querySelector('[data-type="price"]');
-        if (priceEl) {
-          const priceText = priceEl.textContent?.trim() || '';
+        const priceContainer = card.querySelector('[data-type="price"]');
+        if (priceContainer) {
+          const priceSpan = priceContainer.querySelector('._2XgTiMJi');
+          const priceText = (priceSpan || priceContainer).textContent?.trim() || '';
           const match = priceText.match(/\$?([\d,]+\.?\d*)/);
           if (match) price = parseFloat(match[1].replace(/,/g, ''));
         }
