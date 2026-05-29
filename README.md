@@ -11,7 +11,7 @@ Users are responsible for complying with the Terms of Service of any websites th
 ## What It Does
 
 1. **Parse** — Paste your BOM in any format (markdown table, CSV, plain text). An AI agent extracts parts, quantities, and specs into a standardized table.
-2. **Search** — Automated search loop extracts pricing directly from Octopart search results (no detail-page navigation). Auto-clicks "Show All" per result.
+2. **Search** — Automated search loop extracts pricing from Octopart (inline offer rows) and Temu (search result cards). CAPTCHA pauses are handed off to you.
 3. **Optimize** — Combinatorial optimization finds the **top 5 cheapest shopping plans**, balancing unit price vs per-platform shipping.
 
 | Rank | Platforms | Parts Cost | Shipping | **Total** |
@@ -149,6 +149,12 @@ bom-to-cart/
 | **Shipping assumption** — Defaults to $10/platform | Override in optimal plan tab. |
 
 ## Changelog
+
+### v0.4.0 (2026-05-28) — Temu support
+
+- **Temu search** — new site adapter with `content/temu.js`. Searches Temu, extracts product names, prices, and sales data from search results
+- **Temu CAPTCHA detection** — detects redirect to `bgn_verification.html`, pauses search loop for manual verification
+- **Site-agnostic navigation** — search loop now routes to the correct site based on adapter selection
 
 ### v0.3.1 (2026-05-28)
 

@@ -6,6 +6,7 @@
   "permissions": ["storage", "activeTab", "scripting", "notifications", "sidePanel"],
   "host_permissions": [
     "https://octopart.com/*",
+    "https://www.temu.com/*",
     "https://openrouter.ai/*",
     "http://127.0.0.1:8666/*"
   ],
@@ -28,6 +29,11 @@
     {
       "matches": ["https://octopart.com/*"],
       "js": ["content/captcha-watcher.js", "content/octopart.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://www.temu.com/*"],
+      "js": ["content/temu.js"],
       "run_at": "document_idle"
     }
   ],

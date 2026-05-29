@@ -306,9 +306,14 @@ async function handleSearchStart({ site, matchStrictness }, sender) {
   }
 
   // Ensure we're on the right site
-  if (!url.includes('octopart.com') && site === 'octopart') {
-    await chrome.tabs.update(tabId, { url: 'https://octopart.com' });
-    await new Promise(r => setTimeout(r, 2000));
+  const SITE_URLS = {
+    octopart: 'https://octopart.com',
+    temu: 'https://www.temu.com',
+  };
+  const expectedUrl = SITE_URLS[site];
+  if (expectedUrl && !url.includes(expectedUrl.replace('https://', ''))) {
+    await chrome.tabs.update(tabId, { url: expectedUrl });
+    await new Promise(r => setTimeout(r, 2500));
   }
 
   currentLoop = new SearchLoop(adapter, {

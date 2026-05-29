@@ -2,12 +2,11 @@
 // Path: /root/bom-to-cart-extension/lib/adapters/registry.js
 
 import { OctopartAdapter } from '/lib/adapters/octopart.js';
+import { TemuAdapter } from '/lib/adapters/temu.js';
 
 const _adapters = {
-  octopart: OctopartAdapter
-  // 未来:
-  // amazon: AmazonAdapter,
-  // aliexpress: AliExpressAdapter,
+  octopart: OctopartAdapter,
+  temu: TemuAdapter,
 };
 
 /** Get an adapter instance for the given site and tab. */
